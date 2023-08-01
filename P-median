@@ -1,0 +1,59 @@
+import pandas as pd
+import numpy as np
+from pulp import *
+
+
+def p_median_pulp(locations, demands, p, demand_demands):
+    # 문제 생성
+    prob = LpProblem("p-median", LpMinimize)
+
+    # 후보지 선택 변수
+    x = LpVariable.dicts("x", locations, 0, 1, LpBinary)
+
+    # 수요지-후보지 할당 변수
+    y = LpVariable.dicts("y", (range(len(demands)), locations), 0, 1, LpBinary)
+
+    # 목적 함수: 수요지-후보지 간의 거리 합 (맨해튼 거리 * 수요량)
+    prob += lpSum([demand_demands[i] * manhattan_distance(demands[i], locations[j]) for i in range(len(demands)) for j in range(len(locations))])
+
+    # 제약 조건: 각 수요지에 대해 하나의 후보지 선택
+    for i in range(len(demands)):
+        prob += lpSum([y[i][j] for j in locations]) == 1
+
+    # 제약 조건: 선택된 후보지의 수가 p개
+    prob += lpSum([x[j] for j in locations]) == p
+
+    # 제약 조건: 수요지-후보지 할당 변수와 후보지 선택 변수 사이의 관계
+    for i in range(len(demands)):
+        for j in locations:
+            prob += y[i][j] <= x[j]
+
+    # PuLP solver 실행
+    prob.solve()
+
+    # 결과 출력
+    print("Status:", LpStatus[prob.status])
+    print("Objective Value:", value(prob.objective))
+
+    # 선택된 후보지 출력
+    selected_facilities = [j for j in locations if value(x[j]) == 1]
+    print("Selected Facilities:", selected_facilities)
+
+    # 수요지-후보지 할당 출력
+    facility_assignments = [(i, j) for i in range(len(demands)) for j in locations if value(y[i][j]) == 1]
+    print("Facility Assignments:")
+    for assignment in facility_assignments:
+        print("Demand", assignment[0], "- Facility", assignment[1])
+
+def manhattan_distance(coord1, coord2):
+    # 두 좌표 간의 맨해튼 거리 계산
+    return abs(coord1[0] - coord2[0]) + abs(coord1[1] - coord2[1])
+
+# 입력 데이터 예시
+demand_coords = [(37.123, -122.456), (38.789, -121.234), (36.987, -123.789)]
+demand_demands = [10, 15, 8]
+candidate_coords = [(37.567, -122.789), (38.123, -121.567), (36.789, -123.456)]
+p = 2
+
+# p-median 알고리즘 실행
+p_median_pulp(candidate_coords, demand_coords, p, demand_demands)
