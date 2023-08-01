@@ -49,11 +49,6 @@ def manhattan_distance(coord1, coord2):
     # 두 좌표 간의 맨해튼 거리 계산
     return abs(coord1[0] - coord2[0]) + abs(coord1[1] - coord2[1])
 
-# 입력 데이터 예시
-demand_coords = [(37.123, -122.456), (38.789, -121.234), (36.987, -123.789)]
-demand_demands = [10, 15, 8]
-candidate_coords = [(37.567, -122.789), (38.123, -121.567), (36.789, -123.456)]
-p = 2
 
 # p-median 알고리즘 실행
 p_median_pulp(candidate_coords, demand_coords, p, demand_demands)
